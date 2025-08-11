@@ -20,10 +20,24 @@ RunPsuper <- function(se.integrated, main_time, plots.format){
       p1 <- plot_train_results(psuper.obj) + ggtitle(paste0("Train Results ", j))
       p2 <- plot_labels_over_psupertime(psuper.obj) + ggtitle(paste0("Labels over Time ", j))
       p3 <- plot_identified_gene_coefficients(psuper.obj) + ggtitle(paste0("Top Gene Coefficients ", j))
-      p4 <- plot_identified_genes_over_psupertime(psuper.obj, palette = "Dark2") + ggtitle(paste0("Top 20 Genes over psupertime ", j))
-
-      gene.comparison <- as.vector(levels(p4[["data"]][["symbol"]]))
-      write.table(gene.comparison, paste0(data.dir, "psuper_top_20_genes_", j, ".txt"), quote = FALSE,row.names = F, sep = "\t", col.names = F)
+      
+      beta_nzero 	= psuper.obj$beta_dt[ abs_beta > 0 ]
+      n_nzero 	= nrow(beta_nzero)
+      top_genes 	= as.character(beta_nzero[1:min(20, nrow(beta_nzero))]$symbol)
+      
+      if (nrow(beta_nzero) > 0) {
+        p4 <- plot_identified_genes_over_psupertime(psuper.obj, palette = "Dark2") + ggtitle(paste0("Top 20 Genes over psupertime ", j))
+  
+        gene.comparison <- as.vector(levels(p4[["data"]][["symbol"]]))
+        write.table(gene.comparison, paste0(data.dir, "psuper_top_20_genes_", j, ".txt"), quote = FALSE,row.names = F, sep = "\t", col.names = F)
+        
+        ggSaveAndJPEG(p4,
+                      paste0(tar.dir, "psuper_top_20_genes_over_pseudotime_", j),
+                      plots.format,
+                      width = 8,
+                      height = 6
+        )
+      }
       
       ggSaveAndJPEG(p1,
                    paste0(tar.dir, "psuper_train_results_", j),
@@ -43,12 +57,7 @@ RunPsuper <- function(se.integrated, main_time, plots.format){
                    width = 8,
                    height = 6
                    )
-      ggSaveAndJPEG(p4,
-                   paste0(tar.dir, "psuper_top_20_genes_over_pseudotime_", j),
-                   plots.format,
-                   width = 8,
-                   height = 6
-                   )
+
     }
   } else {
     if(length(unique(se.integrated@meta.data[["group"]])) >= 2){
